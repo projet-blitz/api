@@ -5,12 +5,12 @@ namespace blitz_api
 {
     public class STMGetter
     {
-        private readonly string _apiKey = "l7c26e992552bb4137814fddf740595bf5";
+        private readonly string _apiKey = "your STM api key";
         private readonly string _url = "https://api.stm.info/pub/od/gtfs-rt/ic/v2";
 
         public async Task<byte[]> GetTripUpdates()
         {
-            HttpClient client = new HttpClient();
+            HttpClient client = new();
             client.DefaultRequestHeaders.Add("apiKey", _apiKey);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/tripUpdates");
@@ -22,7 +22,7 @@ namespace blitz_api
 
         public async Task<byte[]> GetVehiclePositions()
         {
-            HttpClient client = new HttpClient();
+            HttpClient client = new();
             client.DefaultRequestHeaders.Add("apiKey", _apiKey);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/vehiclePositions");
@@ -34,7 +34,7 @@ namespace blitz_api
 
         public async Task<byte[]> GetEtatService()
         {
-            HttpClient client = new HttpClient();
+            HttpClient client = new();
             client.DefaultRequestHeaders.Add("apiKey", _apiKey);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/etatservice");

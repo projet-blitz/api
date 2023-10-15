@@ -2,9 +2,9 @@ using blitz_api;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
-GTFSBinding gtfsBinding = new GTFSBinding();
-StaticCsv staticCsv = new StaticCsv();
-STMGetter stmGetter = new STMGetter();
+GTFSBinding gtfsBinding = new();
+StaticCsv staticCsv = new();
+STMGetter stmGetter = new();
 
 app.MapGet("/routes", () => staticCsv.GetAllRoutes());
 

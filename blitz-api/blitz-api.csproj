@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Folder Include="gtfs_stm\" />
+    <Folder Include="gtfs_stm\" />
   </ItemGroup>
 
 </Project>

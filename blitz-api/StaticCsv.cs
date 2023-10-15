@@ -1,28 +1,33 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
-using System.Drawing;
 using System.Globalization;
-using System.Reflection.PortableExecutable;
 
 namespace blitz_api
 {
     public class StaticCsv
     {
 
-        private readonly string routes = @"C:\Users\cam\Documents\Projets\projet-blitz\api\blitz-api\gtfs_stm\routes.txt";
-        private readonly string trips = @"C:\Users\cam\Documents\Projets\projet-blitz\api\blitz-api\gtfs_stm\trips.txt";
-        private readonly string stopTimes = @"C:\Users\cam\Documents\Projets\projet-blitz\api\blitz-api\gtfs_stm\stop_times.txt";
-        private readonly string stops = @"C:\Users\cam\Documents\Projets\projet-blitz\api\blitz-api\gtfs_stm\stops.txt";
-        private readonly int linesToSkip = 64000;
+        private readonly string routes = "gtfs_stm/routes.txt";
+        private readonly string trips = "gtfs_stm/trips.txt";
+        private readonly string stopTimes = "gtfs_stm/stop_times.txt";
+        private readonly string stops = "gtfs_stm/stops.txt";
+
+        /* Idéalement, on appelle une fois ces méthodes, 
+         * on stocke le json dans un fichier et on renvoie 
+         * le fichier sans avoir à trier les csv à chaque fois.
+         * 
+         * Puis, pour savoir quand le mettre à jour, on peut se fier
+         * au "feed_end_date" dans "gtfs_stm/feed_info.txt".
+         */
 
         public string GetAllRoutes()
         {
 
-            List<RouteSTM> routesList = new List<RouteSTM>();
+            List<RouteSTM> routesList = new();
 
             using (var reader = new StreamReader(routes))
-            using (CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+            using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
                 for (int i = 0; i < 5; i++)
                 {
@@ -53,7 +58,7 @@ namespace blitz_api
 
         public List<string> GetDirectionsForRouteId(string routeId)
         {
-            List<string> directions = new List<string>();
+            List<string> directions = new();
             string direction1 = "";
 
             // Directions
@@ -68,11 +73,6 @@ namespace blitz_api
             using (var reader = new StreamReader(trips))
             using (CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
-                for (int i = 0; i < linesToSkip; i++)
-                {
-                    reader.ReadLine();
-                }
-
                 while (csv.Read())
                 {
                     if (csv.GetField(0) == routeId)
@@ -98,12 +98,6 @@ namespace blitz_api
 
         public string GetStopIdsForRouteAndDirection(string routeId, string direction)
         {
-
-            // Dans trips -> routeId + un tripId
-            // Dans stops -> un tripId et prendre tous les stops
-            // Order les stops en ordre de séquence
-            // GetField(3) == routeId + "-" + direction
-
             string routeHeadsign = routeId + "-" + direction;
             string selectedTrip = "";
 
@@ -112,11 +106,6 @@ namespace blitz_api
             using (var reader = new StreamReader(trips))
             using (CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
-                for (int i = 0; i < linesToSkip; i++)
-                {
-                    reader.ReadLine();
-                }
-
                 while (csv.Read())
                 {
                     if (csv.GetField(3) == routeHeadsign)
