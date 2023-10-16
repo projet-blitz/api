@@ -4,7 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # GTFS Static folder
-gtfs_static/
+gtfs_stm/*
 
 # User-specific files
 *.rsuser
