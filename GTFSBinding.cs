@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using TransitRealtime;
 
 namespace blitz_api
@@ -13,13 +12,11 @@ namespace blitz_api
 
         public async Task<string> GiveMeData()
         {
-            byte[] vehicleJson = await stm.GetVehiclePositions();
             byte[] tripJson = await stm.GetTripUpdates();
 
-            FeedMessage vehicleFeed = FeedMessage.Parser.ParseFrom(vehicleJson);
-            FeedMessage tripFeed = FeedMessage.Parser.ParseFrom(tripJson);
+            FeedMessage feed = FeedMessage.Parser.ParseFrom(tripJson);
 
-            var parsedJson = JsonConvert.DeserializeObject(tripFeed.ToString());
+            var parsedJson = JsonConvert.DeserializeObject(feed.ToString());
             return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
         }
 
@@ -29,7 +26,7 @@ namespace blitz_api
             FeedMessage tripFeed = FeedMessage.Parser.ParseFrom(tripJson);
 
             DateTime maintenant = DateTime.Now.AddMinutes(-2);
-            List<DateTime> arrivalTimes = new List<DateTime>();
+            List<DateTime> arrivalTimes = new();
 
             foreach (var entity in tripFeed.Entity)
             {

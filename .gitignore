@@ -6,6 +6,9 @@
 # GTFS Static folder
 gtfs_stm/*
 
+# Environement variables
+.env
+
 # User-specific files
 *.rsuser
 *.suo

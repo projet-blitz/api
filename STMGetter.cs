@@ -1,21 +1,21 @@
 ﻿using System.IO.Compression;
-using System.Reflection;
-using System.Text;
-using TransitRealtime;
+using dotenv.net;
 
 namespace blitz_api
 {
     public class STMGetter
     {
-        private readonly string _apiKey = "your STM api key";
+        private readonly string _apiKey = "stm_api_key";
         private readonly string _url = "https://api.stm.info/pub/od/gtfs-rt/ic/v2";
         private readonly string _staticUrl = "https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip";
         private readonly string _staticDir = "gtfs_stm/";
 
         public async Task<byte[]> GetTripUpdates()
         {
+            var envVars = DotEnv.Read();
+
             HttpClient client = new();
-            client.DefaultRequestHeaders.Add("apiKey", _apiKey);
+            client.DefaultRequestHeaders.Add("apiKey", envVars[_apiKey]);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/tripUpdates");
 
@@ -26,8 +26,10 @@ namespace blitz_api
 
         public async Task<byte[]> GetVehiclePositions()
         {
+            var envVars = DotEnv.Read();
+
             HttpClient client = new();
-            client.DefaultRequestHeaders.Add("apiKey", _apiKey);
+            client.DefaultRequestHeaders.Add("apiKey", envVars[_apiKey]);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/vehiclePositions");
 
@@ -38,8 +40,10 @@ namespace blitz_api
 
         public async Task<byte[]> GetEtatService()
         {
+            var envVars = DotEnv.Read();
+
             HttpClient client = new();
-            client.DefaultRequestHeaders.Add("apiKey", _apiKey);
+            client.DefaultRequestHeaders.Add("apiKey", envVars[_apiKey]);
 
             using HttpResponseMessage response = await client.GetAsync(_url + "/etatservice");
 
