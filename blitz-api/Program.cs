@@ -16,4 +16,6 @@ app.MapGet("/horaires/{routeId}/{stopId}", (string routeId, string stopId) => gt
 
 app.MapGet("/all", () => gtfsBinding.GiveMeData());
 
+app.MapGet("/gtfs", () => stmGetter.GetGtfsStatic());
+
 app.Run();
