@@ -4,7 +4,10 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # GTFS Static folder
-gtfs_stm/*
+gtfs_static/*
+
+# Generated JSON
+GeneratedJson/*
 
 # Environement variables
 .env

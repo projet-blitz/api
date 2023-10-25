@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using TransitRealtime;
 
-namespace blitz_api
+namespace blitz_api.Controllers
 {
     /// <summary>
     /// Class GTFSBinding uses protobuffer data and returns the desired information
@@ -41,10 +41,10 @@ namespace blitz_api
                             if (stopTimeUpdate.StopId == stopId)
                             {
                                 DateTime arrivalTime = TimeZoneInfo.ConvertTimeFromUtc(
-                                    DateTimeOffset.FromUnixTimeSeconds(stopTimeUpdate.Arrival.Time).DateTime, 
+                                    DateTimeOffset.FromUnixTimeSeconds(stopTimeUpdate.Arrival.Time).DateTime,
                                     TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")
                                 );
-                                
+
                                 if (DateTime.Compare(maintenant, arrivalTime) < 0)
                                     arrivalTimes.Add(arrivalTime);
                             }

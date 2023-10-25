@@ -3,15 +3,17 @@ using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using System.Globalization;
 
-namespace blitz_api
+namespace blitz_api.Controllers
 {
     public class StaticCsv
     {
 
-        private readonly string routes = "gtfs_stm/routes.txt";
-        private readonly string trips = "gtfs_stm/trips.txt";
-        private readonly string stopTimes = "gtfs_stm/stop_times.txt";
-        private readonly string stops = "gtfs_stm/stops.txt";
+        private readonly string routes = "gtfs_static/routes.txt";
+        private readonly string trips = "gtfs_static/trips.txt";
+        private readonly string stopTimes = "gtfs_static/stop_times.txt";
+        private readonly string stops = "gtfs_static/stops.txt";
+
+        private readonly int nbLignesMetro = 5;
 
         /* Idéalement, on appelle une fois ces méthodes, 
          * on stocke le json dans un fichier et on renvoie 
@@ -29,17 +31,22 @@ namespace blitz_api
             using (var reader = new StreamReader(routes))
             using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
-                for (int i = 0; i < 5; i++)
+                // On ignore les premières lignes de métro
+                for (int i = 0; i < nbLignesMetro; i++)
                 {
                     reader.ReadLine();
                 }
 
                 while (csv.Read())
                 {
-                    routesList.Add(new RouteSTM() 
+                    List<string> directions = GetDirectionsForRouteId(csv.GetField(0)!);
+                    routesList.Add(new RouteSTM()
                     {
-                        routeId = csv.GetField(0)!, routeName = csv.GetField(3)!
-                    });   
+                        routeId = csv.GetField(0)!,
+                        routeName = csv.GetField(3)!,
+                        direction1 = directions[0],
+                        direction2 = directions[1]
+                    });
                 }
             }
 
@@ -62,7 +69,7 @@ namespace blitz_api
             string direction1 = "";
 
             // Directions
-            Dictionary<string, string> directionMap = new Dictionary<string, string>
+            Dictionary<string, string> directionMap = new()
             {
                 { "E", "O" },
                 { "O", "E" },
@@ -71,7 +78,7 @@ namespace blitz_api
             };
 
             using (var reader = new StreamReader(trips))
-            using (CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+            using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
                 while (csv.Read())
                 {
@@ -101,10 +108,10 @@ namespace blitz_api
             string routeHeadsign = routeId + "-" + direction;
             string selectedTrip = "";
 
-            List<StopSTM> stopList = new List<StopSTM>();
+            List<StopSTM> stopList = new();
 
             using (var reader = new StreamReader(trips))
-            using (CsvReader csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+            using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
                 while (csv.Read())
                 {
@@ -119,10 +126,10 @@ namespace blitz_api
             if (selectedTrip == "")
             {
                 Console.WriteLine("No trip found for headsign [" + routeHeadsign + "]");
-            } 
+            }
             else
             {
-                using CsvReader csv = new CsvReader(new StreamReader(stopTimes), new CsvConfiguration(CultureInfo.InvariantCulture));
+                using CsvReader csv = new(new StreamReader(stopTimes), new CsvConfiguration(CultureInfo.InvariantCulture));
                 while (csv.Read())
                 {
                     if (csv.GetField(0) == selectedTrip)
@@ -152,14 +159,12 @@ namespace blitz_api
 
         public void GetStopName(StopSTM stop)
         {
-            using (CsvReader csv = new CsvReader(new StreamReader(stops), new CsvConfiguration(CultureInfo.InvariantCulture)))
+            using CsvReader csv = new(new StreamReader(stops), new CsvConfiguration(CultureInfo.InvariantCulture));
+            while (csv.Read())
             {
-                while (csv.Read())
+                if (csv.GetField(1) == stop.stopId)
                 {
-                    if (csv.GetField(1) == stop.stopId)
-                    {
-                        stop.stopName = csv.GetField(2)!;
-                    }
+                    stop.stopName = csv.GetField(2)!;
                 }
             }
         }
@@ -169,17 +174,18 @@ namespace blitz_api
         {
             public string routeId = "";
             public string routeName = "";
+            public string direction1 = "";
+            public string direction2 = "";
         }
-
 
         public class StopSTM
         {
-            public StopSTM(string id, string sequence) 
-            { 
+            public StopSTM(string id, string sequence)
+            {
                 stopId = id;
                 stopSequence = sequence;
             }
-            
+
             public string stopId = "";
             public string stopName = "";
             public string stopSequence = "";

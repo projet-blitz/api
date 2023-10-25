@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using dotenv.net;
 
-namespace blitz_api
+namespace blitz_api.Controllers
 {
     public class STMGetter
     {
@@ -62,7 +62,10 @@ namespace blitz_api
 
             string destinationPath = Path.Combine(baseDirectory, relativePath);
 
-            Directory.CreateDirectory(destinationPath);
+            if (!Directory.Exists(destinationPath))
+            {
+                Directory.CreateDirectory(destinationPath);
+            }
 
             using (HttpClient httpClient = new())
             {
@@ -81,12 +84,10 @@ namespace blitz_api
 
                     Console.WriteLine($"Download successful. The file has been saved in: {localFilePath}");
 
-                    // Unzip the downloaded file
                     ZipFile.ExtractToDirectory(localFilePath, destinationPath);
 
                     Console.WriteLine($"File successfully unzipped to: {destinationPath}");
 
-                    // Delete the .zip file
                     File.Delete(localFilePath);
 
                     Console.WriteLine($"{fileName} has been deleted.");
