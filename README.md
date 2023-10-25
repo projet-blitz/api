@@ -29,7 +29,7 @@ git clone https://github.com/projet-blitz/api.git
 STM_API_KEY=VOTRE_CLÉ_API_STM
 ```
 
-2. Téléchargez les fichiers GTFS static (GTFS planifié) dans le dossier `gtfs/`. Ils sont nécessaires pour le fonctionnement de l'API. Pour ce faire, vous pouvez utiliser l'endpoint `GET /gtfs` (voir la section utilisation) ou bien vous pouvez les télécharger manuellement sur le site de la STM : [Téléchargez le GTFS planifié](https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip).
+2. Téléchargez les fichiers GTFS static (GTFS planifié) dans le dossier `gtfs_static/`. Ils sont nécessaires pour le fonctionnement de l'API. Pour ce faire, vous pouvez utiliser l'endpoint `GET /gtfs` (voir la section utilisation) ou bien vous pouvez les télécharger manuellement sur le site de la STM : [Téléchargez le GTFS planifié](https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip).
 
 ## Utilisation
 L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel, des lignes de bus et des arrêts :
@@ -38,4 +38,4 @@ L'API fournit les endpoints suivants pour accéder aux données des horaires de 
 - `GET /horaires/{routeId}/{stopId}` : Obtiens les horaires en temps réel pour un arrêt.
 #### Débuggage et tests :
 - `GET /all` : Retourne la réponse JSON complète de la STM.
-- `GET /gtfs` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et les place dans le dossier `gtfs/`.
+- `GET /gtfs` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et les place dans le dossier `gtfs_static/`.
