@@ -1,5 +1,9 @@
-﻿namespace blitz_api.Models
+﻿using blitz_api.Helpers;
+using Newtonsoft.Json;
+
+namespace blitz_api.Models
 {
+    [JsonConverter(typeof(DirectionConverter))]
     public class Stop
     {
         public string StopSequence { get; set; }
@@ -16,6 +20,8 @@
     public class Direction
     {
         public string Name { get; set; }
+
+        [JsonIgnore]
         public string SampleTrip { get; set; }
         public List<Stop> Stops { get; set; }
 

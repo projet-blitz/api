@@ -1,28 +1,56 @@
-﻿using Newtonsoft.Json;
+﻿using dotenv.net;
 using TransitRealtime;
+using static blitz_api.Config.Config;
 
 namespace blitz_api.Controllers
 {
-    /// <summary>
-    /// Class GTFSBinding uses protobuffer data and returns the desired information
-    /// </summary>
-    public class GTFSBinding
+    public class GtfsRealtimeController
     {
-        STMGetter stm = new STMGetter();
-
-        public async Task<string> GiveMeData()
+        public async Task<byte[]> GetTripUpdates()
         {
-            byte[] tripJson = await stm.GetTripUpdates();
+            var envVars = DotEnv.Read();
 
-            FeedMessage feed = FeedMessage.Parser.ParseFrom(tripJson);
+            HttpClient client = new();
+            client.DefaultRequestHeaders.Add("apiKey", envVars["stm_api_key"]);
 
-            var parsedJson = JsonConvert.DeserializeObject(feed.ToString());
-            return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+            using HttpResponseMessage response = await client.GetAsync(ApiUrl + TripEndpoint);
+
+            var jsonResponse = await response.Content.ReadAsByteArrayAsync();
+
+            return jsonResponse;
+        }
+
+        public async Task<byte[]> GetVehiclePositions()
+        {
+            var envVars = DotEnv.Read();
+
+            HttpClient client = new();
+            client.DefaultRequestHeaders.Add("apiKey", envVars["stm_api_key"]);
+
+            using HttpResponseMessage response = await client.GetAsync(ApiUrl + VehicleEndpoint);
+
+            var jsonResponse = await response.Content.ReadAsByteArrayAsync();
+
+            return jsonResponse;
+        }
+
+        public async Task<byte[]> GetEtatService()
+        {
+            var envVars = DotEnv.Read();
+
+            HttpClient client = new();
+            client.DefaultRequestHeaders.Add("apiKey", envVars["stm_api_key"]);
+
+            using HttpResponseMessage response = await client.GetAsync(ApiUrl + EtatEndpoint);
+
+            var jsonResponse = await response.Content.ReadAsByteArrayAsync();
+
+            return jsonResponse;
         }
 
         public async Task<List<string>> GetHoraireForStop(string routeId, string stopId)
         {
-            byte[] tripJson = await stm.GetTripUpdates();
+            byte[] tripJson = await GetTripUpdates();
             FeedMessage tripFeed = FeedMessage.Parser.ParseFrom(tripJson);
 
             DateTime maintenant = DateTime.Now.AddMinutes(-2);

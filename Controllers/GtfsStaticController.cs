@@ -1,33 +1,102 @@
-﻿using CsvHelper.Configuration;
+﻿using blitz_api.Helpers;
+using blitz_api.Models;
+using CsvHelper.Configuration;
 using CsvHelper;
 using Newtonsoft.Json;
 using System.Globalization;
-using blitz_api.Models;
+using System.IO.Compression;
+using static blitz_api.Config.Config;
 
 namespace blitz_api.Controllers
 {
-    public class CsvWorker
+    public class GtfsStaticController
     {
-        private readonly string routes = "gtfs_static/routes.txt";
-        private readonly string trips = "gtfs_static/trips.txt";
-        private readonly string stopTimes = "gtfs_static/stop_times.txt";
-        private readonly string stops = "gtfs_static/stops.txt";
+        public string GetBusNetwork()
+        {
+            string baseDirectory = Environment.CurrentDirectory;
+            string destinationPath = Path.Combine(baseDirectory, JsonFolderName);
+            string localFilePath = Path.Combine(destinationPath, JsonFileName);
 
-        private readonly string jsonFolderName = "GeneratedJson";
-        private readonly string jsonFileName = "data.json";
+            return localFilePath;
+        }
 
-        private readonly int nbLignesMetro = 5;
+        public async void MakeBusNetwork()
+        {
+            await GetGtfsStatic();
+            GetBusSystem();
+        }
 
-        public string GetBusSystem()
+        /// <summary>
+        /// Obtient le GTFS static (planifié) de la STM.
+        /// </summary>
+        private static async Task GetGtfsStatic()
+        {
+            string url = StaticUrl;
+            string relativePath = StaticDir;
+
+            string baseDirectory = Environment.CurrentDirectory;
+
+            string destinationPath = Path.Combine(baseDirectory, relativePath);
+
+            Console.WriteLine("[1/9] Creating folder...");
+            if (!Directory.Exists(destinationPath))
+            {
+                Directory.CreateDirectory(destinationPath);
+            }
+            else
+            {
+                string[] files = Directory.GetFiles(destinationPath);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            }
+
+            using HttpClient httpClient = new();
+            Console.WriteLine("[2/9] Downloading files...");
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string fileName = Path.GetFileName(new Uri(url).LocalPath);
+
+                string localFilePath = Path.Combine(destinationPath, fileName);
+
+                using (var fileStream = File.Create(localFilePath))
+                {
+                    await response.Content.CopyToAsync(fileStream);
+                }
+
+                Console.WriteLine($"[3/9] Download successful. File saved in: {localFilePath}");
+
+                ZipFile.ExtractToDirectory(localFilePath, destinationPath);
+
+                Console.WriteLine($"[4/9] Successfully unzipped file");
+
+                File.Delete(localFilePath);
+
+                Console.WriteLine($"[5/9] {fileName} has been deleted.");
+            }
+            else
+            {
+                Console.WriteLine($"[3/9] Download failed. Status code: {response.StatusCode}");
+            }
+        }
+
+        /// <summary>
+        /// Génère le système de bus selon le GTFS static
+        /// et le sauvegarde dans un fichier .json
+        /// </summary>
+        private static void GetBusSystem()
         {
             // Obtenir toutes les routes (IDs & Noms)
-            Console.WriteLine("[1/4] Obtaining Routes...");
+            Console.WriteLine("[6/9] Obtaining Routes...");
 
             List<Models.Route> routesList = new();
 
-            using var reader = new StreamReader(routes);
+            using var reader = new StreamReader(Routes);
             using CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-            for (int i = 0; i < nbLignesMetro; i++)
+            for (int i = 0; i < NbLignesMetro; i++)
             {
                 reader.ReadLine();
             }
@@ -38,7 +107,7 @@ namespace blitz_api.Controllers
             }
 
             // Obtenir toutes les directions
-            Console.WriteLine("[2/4] Obtaining Directions...");
+            Console.WriteLine("[7/9] Obtaining Directions...");
 
             Dictionary<string, string> directionMap = new()
             {
@@ -53,7 +122,7 @@ namespace blitz_api.Controllers
                 string direction1 = string.Empty;
                 string direction2 = string.Empty;
 
-                using var readerDirs = new StreamReader(trips);
+                using var readerDirs = new StreamReader(Trips);
                 using CsvReader csvTrips = new(readerDirs, new CsvConfiguration(CultureInfo.InvariantCulture));
                 {
                     while (csvTrips.Read())
@@ -81,11 +150,11 @@ namespace blitz_api.Controllers
             }
 
             // Obtenir tous les stops pour les routes
-            Console.WriteLine("[3/4] Obtaining Stops...");
+            Console.WriteLine("[8/9] Obtaining Stops...");
 
             Dictionary<string, List<Tuple<string, string>>> csvData = new();
 
-            using var readerStops = new StreamReader(stopTimes);
+            using var readerStops = new StreamReader(StopTimes);
             using CsvReader csvStopTimes = new(readerStops, new CsvConfiguration(CultureInfo.InvariantCulture));
             while (csvStopTimes.Read())
             {
@@ -116,10 +185,10 @@ namespace blitz_api.Controllers
             }
 
             // Obtenir tous les noms des stops
-            Console.WriteLine("[4/4] Obtaining Stop Names...");
+            Console.WriteLine("[9/9] Obtaining Stop Names...");
 
             Dictionary<string, string> csvStopData = new();
-            using CsvReader csvStops = new(new StreamReader(stops), new CsvConfiguration(CultureInfo.InvariantCulture));
+            using CsvReader csvStops = new(new StreamReader(Stops), new CsvConfiguration(CultureInfo.InvariantCulture));
             while (csvStops.Read())
             {
                 string stopId = csvStops.GetField(0)!;
@@ -145,17 +214,18 @@ namespace blitz_api.Controllers
                 }
             }
 
-            Console.WriteLine("Process Finished");
+            Console.WriteLine("Bus Network update successful");
 
             string json = JsonConvert.SerializeObject(routesList, new JsonSerializerSettings
             {
                 Formatting = Formatting.Indented,
-                NullValueHandling = NullValueHandling.Ignore
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new DirectionContractResolver()
             });
 
             string baseDirectory = Environment.CurrentDirectory;
-            string destinationPath = Path.Combine(baseDirectory, jsonFolderName);
-            string localFilePath = Path.Combine(destinationPath, jsonFileName);
+            string destinationPath = Path.Combine(baseDirectory, JsonFolderName);
+            string localFilePath = Path.Combine(destinationPath, JsonFileName);
 
             if (!Directory.Exists(destinationPath))
             {
@@ -163,8 +233,6 @@ namespace blitz_api.Controllers
             }
 
             File.WriteAllText(localFilePath, json);
-
-            return json;
         }
     }
 }
