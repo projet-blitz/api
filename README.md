@@ -26,16 +26,14 @@ git clone https://github.com/projet-blitz/api.git
 ## Configuration
 1. Créez un fichier `.env` à la racine du projet et ajoutez votre clé d'API STM de la manière suivante :
 ```bash
-STM_API_KEY=VOTRE_CLÉ_API_STM
+stm_api_key=VOTRE_CLÉ_API_STM
 ```
 
-2. Téléchargez les fichiers GTFS static (GTFS planifié) dans le dossier `gtfs_static/`. Ils sont nécessaires pour le fonctionnement de l'API. Pour ce faire, vous pouvez utiliser l'endpoint `GET /gtfs` (voir la section utilisation) ou bien vous pouvez les télécharger manuellement sur le site de la STM : [Téléchargez le GTFS planifié](https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip).
+2. Générez le réseau de bus. Les fichiers static contiennent l'information nécéssaire à la génération du réseau de bus. Pour ce faire, vous pouvez utiliser l'endpoint `GET /updateBusNetwork` (voir la section utilisation). Le back-end va télécharger les fichiers du GTFS static (GTFS planifié) et créer un fichier .json contenant le réseau de bus.
 
 ## Utilisation
-L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel, des lignes de bus et des arrêts :
-- `GET /routes` : Obtiens le numéro, le nom et les directions de toutes les lignes de bus.
-- `GET /stops/{routeId}/{direction}` : Obtiens l'ordre, le code et le nom des arrêts pour une ligne de bus selon sa direction.
+L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel et du réseau de bus :
+- `GET /getBusNetwork` : Obtiens le réseau de bus de la STM.
 - `GET /horaires/{routeId}/{stopId}` : Obtiens les horaires en temps réel pour un arrêt.
 #### Débuggage et tests :
-- `GET /all` : Retourne la réponse JSON complète de la STM.
-- `GET /gtfs` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et les place dans le dossier `gtfs_static/`.
+- `GET /updateBusNetwork` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et refait le fichier .json contenant le réseau de bus.
