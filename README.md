@@ -29,7 +29,7 @@ git clone https://github.com/projet-blitz/api.git
 stm_api_key=VOTRE_CLÉ_API_STM
 ```
 
-2. Générez le réseau de bus. Les fichiers static contiennent l'information nécéssaire à la génération du réseau de bus. Pour ce faire, vous pouvez utiliser l'endpoint `GET /updateBusNetwork` (voir la section utilisation). Le back-end va télécharger les fichiers du GTFS static (GTFS planifié) et créer un fichier .json contenant le réseau de bus.
+2. Générez le réseau de bus. Pour ce faire, vous pouvez utiliser l'endpoint `GET /updateBusNetwork` (voir la section utilisation). Le back-end va télécharger les fichiers du GTFS static (GTFS planifié) et créer un fichier .json contenant le réseau de bus.
 
 ## Utilisation
 L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel et du réseau de bus :
