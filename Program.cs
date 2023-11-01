@@ -1,6 +1,9 @@
+using blitz_api.Config;
 using blitz_api.Controllers;
+using blitz_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHostedService<GtfsStaticUpdateService>();
 var app = builder.Build();
 
 app.Use(async (context, next) =>
@@ -18,21 +21,34 @@ app.Use(async (context, next) =>
 GtfsRealtimeController realtimeController = new();
 GtfsStaticController staticController = new();
 
-app.MapGet("/getBusNetwork", () =>
+app.MapGet("/getBusNetwork", async context =>
 {
+    /*while (Config.IsUpdating)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(2));
+    }*/
+    
     var jsonFile = staticController.GetBusNetwork();
 
     if (File.Exists(jsonFile))
     {
-        return Results.File(jsonFile, "application/json");
+        var json = Results.File(jsonFile, "application/json");
+        context.Response.StatusCode = 200;
+        await context.Response.WriteAsJsonAsync(json);
     }
     else
     {
-        return Results.NotFound();
+        context.Response.StatusCode = 404;
+        await context.Response.WriteAsync("Bus Network not found");
     }
 });
 
-app.MapGet("/updateBusNetwork", () => staticController.MakeBusNetwork());
+app.MapGet("/updateBusNetwork", () => 
+{
+    //if (!Config.IsUpdating)
+    staticController.MakeBusNetwork();
+   
+});
 
 app.MapGet("/horaires/{routeId}/{stopId}", async (string routeId, string stopId) =>
 {

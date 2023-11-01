@@ -15,9 +15,4 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="GeneratedJson\" />
-    <Folder Include="gtfs_static\" />
-  </ItemGroup>
-
 </Project>

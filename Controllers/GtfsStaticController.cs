@@ -11,54 +11,97 @@ namespace blitz_api.Controllers
 {
     public class GtfsStaticController
     {
+        private bool isUpdating = false;
+
+        public bool IsUpdating()
+        {
+            return isUpdating;
+        }
+
         public string GetBusNetwork()
         {
             string baseDirectory = Environment.CurrentDirectory;
-            string destinationPath = Path.Combine(baseDirectory, JsonFolderName);
-            string localFilePath = Path.Combine(destinationPath, JsonFileName);
+            string localFilePath = Path.Combine(baseDirectory, JsonFilePath);
 
             return localFilePath;
         }
 
         public async void MakeBusNetwork()
         {
-            await GetGtfsStatic();
-            GetBusSystem();
+            isUpdating = true;
+
+            try
+            {
+                CreateDirs();
+                await GetGtfsStatic();
+                GetBusSystem();
+            } 
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to create bus network : " + ex.ToString());
+            }
+
+            isUpdating = false;
         }
 
-        /// <summary>
-        /// Obtient le GTFS static (planifié) de la STM.
-        /// </summary>
-        private static async Task GetGtfsStatic()
+        private void CreateDirs()
         {
-            string url = StaticUrl;
-            string relativePath = StaticDir;
+            Console.WriteLine("[1/9] Creating folders...");
 
             string baseDirectory = Environment.CurrentDirectory;
 
-            string destinationPath = Path.Combine(baseDirectory, relativePath);
+            // Data directory containing both subdirs
+            string dataDestinationPath = Path.Combine(baseDirectory, DataDir);
+            if (!Directory.Exists(dataDestinationPath))
+                Directory.CreateDirectory(dataDestinationPath);
 
-            Console.WriteLine("[1/9] Creating folder...");
-            if (!Directory.Exists(destinationPath))
+            // GTFS static dir
+            string staticDestinationPath = Path.Combine(dataDestinationPath, StaticDir);
+            if (!Directory.Exists(staticDestinationPath))
             {
-                Directory.CreateDirectory(destinationPath);
+                Directory.CreateDirectory(staticDestinationPath);
             }
             else
             {
-                string[] files = Directory.GetFiles(destinationPath);
+                string[] files = Directory.GetFiles(staticDestinationPath);
                 foreach (string file in files)
                 {
                     File.Delete(file);
                 }
             }
 
-            using HttpClient httpClient = new();
+            // Generated json dir
+            string jsonDestinationPath = Path.Combine(dataDestinationPath, JsonDir);
+            if (!Directory.Exists(jsonDestinationPath))
+            {
+                Directory.CreateDirectory(jsonDestinationPath);
+            }
+            else
+            {
+                string[] files = Directory.GetFiles(jsonDestinationPath);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Obtient le GTFS static (planifié) de la STM.
+        /// </summary>
+        private async Task GetGtfsStatic()
+        {
+            string baseDirectory = Environment.CurrentDirectory;
+            string destinationPath = Path.Combine(baseDirectory, DataDir + StaticDir);
+
             Console.WriteLine("[2/9] Downloading files...");
-            HttpResponseMessage response = await httpClient.GetAsync(url);
+
+            using HttpClient httpClient = new();
+            HttpResponseMessage response = await httpClient.GetAsync(StaticDownloadUrl);
 
             if (response.IsSuccessStatusCode)
             {
-                string fileName = Path.GetFileName(new Uri(url).LocalPath);
+                string fileName = Path.GetFileName(new Uri(StaticDownloadUrl).LocalPath);
 
                 string localFilePath = Path.Combine(destinationPath, fileName);
 
@@ -79,7 +122,7 @@ namespace blitz_api.Controllers
             }
             else
             {
-                Console.WriteLine($"[3/9] Download failed. Status code: {response.StatusCode}");
+                throw new Exception($"Download failed. Status code: {response.StatusCode}");
             }
         }
 
@@ -87,7 +130,7 @@ namespace blitz_api.Controllers
         /// Génère le système de bus selon le GTFS static
         /// et le sauvegarde dans un fichier .json
         /// </summary>
-        private static void GetBusSystem()
+        private void GetBusSystem()
         {
             // Obtenir toutes les routes (IDs & Noms)
             Console.WriteLine("[6/9] Obtaining Routes...");
@@ -214,8 +257,6 @@ namespace blitz_api.Controllers
                 }
             }
 
-            Console.WriteLine("Bus Network update successful");
-
             string json = JsonConvert.SerializeObject(routesList, new JsonSerializerSettings
             {
                 Formatting = Formatting.Indented,
@@ -224,15 +265,19 @@ namespace blitz_api.Controllers
             });
 
             string baseDirectory = Environment.CurrentDirectory;
-            string destinationPath = Path.Combine(baseDirectory, JsonFolderName);
-            string localFilePath = Path.Combine(destinationPath, JsonFileName);
+            string jsonDirectory = Path.Combine(baseDirectory, DataDir + JsonDir);
+            string jsonFilePath = Path.Combine(baseDirectory, JsonFilePath);
 
-            if (!Directory.Exists(destinationPath))
+            if (Directory.Exists(jsonDirectory))
             {
-                Directory.CreateDirectory(destinationPath);
+                File.WriteAllText(jsonFilePath, json);
+            }
+            else
+            {
+                throw new Exception("Cannot write file - JSON directory does not exist");
             }
 
-            File.WriteAllText(localFilePath, json);
+            Console.WriteLine("Bus Network update successful");
         }
     }
 }
