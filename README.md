@@ -33,7 +33,7 @@ stm_api_key=VOTRE_CLÉ_API_STM
 
 ## Utilisation
 L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel et du réseau de bus :
-- `GET /getBusNetwork` : Obtiens le réseau de bus de la STM.
+- `GET /getBusNetwork` : Obtiens le réseau de bus de la STM en format json.
 - `GET /horaires/{routeId}/{stopId}` : Obtiens les horaires en temps réel pour un arrêt.
 #### Débuggage et tests :
 - `GET /updateBusNetwork` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et refait le fichier .json contenant le réseau de bus.
