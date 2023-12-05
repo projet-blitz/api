@@ -17,6 +17,7 @@ namespace blitz_api.Models
 
         [JsonIgnore]
         public string SampleTrip { get; set; } = sampleTrip;
+
         public List<Stop> Stops { get; set; } = [];
     }
 
