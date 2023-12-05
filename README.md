@@ -7,7 +7,7 @@ L'API fournit également des informations sur les lignes de bus et leurs arrêts
 
 Avant de pouvoir exécuter le back-end de l'API, assurez-vous de disposer des éléments suivants :
 
-- [.NET 6.0 Core SDK](https://dotnet.microsoft.com/download) : Assurez-vous d'installer la version compatible de .NET Core SDK sur votre machine.
+- [.NET 8.0 Core SDK](https://dotnet.microsoft.com/download) : Assurez-vous d'installer la version compatible de .NET Core SDK sur votre machine.
 
 - Clé d'API STM : Vous devez obtenir une clé d'API de la STM pour accéder aux données des horaires de bus en temps réel. Vous pouvez vous en procurer une en vous inscrivant sur le [portail développeur de la STM](https://www.stm.info/fr/a-propos/developpeurs).
 
