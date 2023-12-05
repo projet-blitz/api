@@ -13,9 +13,9 @@ namespace blitz_api.Controllers
     {
         public async void MakeBusNetwork()
         {
-            if (!GlobalStore.GlobalVar["IsUpdating"])
+            if (!GlobalStore.GlobalVar[UpdateFlagKey])
             {
-                GlobalStore.GlobalVar["IsUpdating"] = true;
+                GlobalStore.GlobalVar[UpdateFlagKey] = true;
 
                 try
                 {
@@ -29,7 +29,7 @@ namespace blitz_api.Controllers
                 }
                 finally 
                 {
-                    GlobalStore.GlobalVar["IsUpdating"] = false;
+                    GlobalStore.GlobalVar[UpdateFlagKey] = false;
                 }
             } else
             {

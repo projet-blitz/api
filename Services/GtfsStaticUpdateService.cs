@@ -31,7 +31,7 @@ namespace blitz_api.Services
 
         private void CheckDates(object? state)
         {
-            if (!GlobalStore.GlobalVar["IsUpdating"])
+            if (!GlobalStore.GlobalVar[UpdateFlagKey])
             {
                 GtfsStaticController staticController = new();
 

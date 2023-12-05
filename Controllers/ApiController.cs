@@ -13,7 +13,7 @@ namespace blitz_api.Controllers
         [Route("GetBusNetwork")]
         public ActionResult GetBusNetwork()
         {
-            if (!GlobalStore.GlobalVar["IsUpdating"]) 
+            if (!GlobalStore.GlobalVar[UpdateFlagKey]) 
             {
                 try
                 {

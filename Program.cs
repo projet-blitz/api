@@ -1,6 +1,7 @@
 using blitz_api.Helpers;
 using blitz_api.Services;
 using System.Collections.Concurrent;
+using static blitz_api.Config.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<GtfsStaticUpdateService>();
 
 GlobalStore.GlobalVar = new ConcurrentDictionary<string, bool>();
-GlobalStore.GlobalVar["IsUpdating"] = false;
+GlobalStore.GlobalVar[UpdateFlagKey] = false;
 
 var app = builder.Build();
 
