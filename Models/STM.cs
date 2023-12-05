@@ -1,49 +1,29 @@
 ﻿using blitz_api.Helpers;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace blitz_api.Models
 {
     [JsonConverter(typeof(DirectionConverter))]
-    public class Stop
+    public class Stop(string stopId, string stopSequence)
     {
-        public string StopSequence { get; set; }
-        public string StopId { get; set; }
+        public string StopSequence { get; set; } = stopSequence;
+        public string StopId { get; set; } = stopId;
         public string? StopName { get; set; }
-
-        public Stop(string stopId, string stopSequence)
-        {
-            StopSequence = stopSequence;
-            StopId = stopId;
-        }
     }
 
-    public class Direction
+    public class Direction(string name, string sampleTrip)
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = name;
 
         [JsonIgnore]
-        public string SampleTrip { get; set; }
-        public List<Stop> Stops { get; set; }
-
-        public Direction(string name, string sampleTrip)
-        {
-            Name = name;
-            SampleTrip = sampleTrip;
-            Stops = new();
-        }
+        public string SampleTrip { get; set; } = sampleTrip;
+        public List<Stop> Stops { get; set; } = [];
     }
 
-    public class Route
+    public class Route(string id, string nom)
     {
-        public string RouteId { get; set; }
-        public string RouteName { get; set; }
-        public List<Direction> Directions { get; set; }
-
-        public Route(string id, string nom)
-        {
-            RouteId = id;
-            RouteName = nom;
-            Directions = new();
-        }
+        public string RouteId { get; set; } = id;
+        public string RouteName { get; set; } = nom;
+        public List<Direction> Directions { get; set; } = [];
     }
 }

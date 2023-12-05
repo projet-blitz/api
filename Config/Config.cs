@@ -2,7 +2,25 @@
 {
     public static class Config
     {
-        // URLs
+        // Update Service
+        static public readonly string UpdateFlagKey = "IsUpdating";
+        static public readonly TimeSpan UpdateCheckerTimer = TimeSpan.FromMinutes(1);
+        static public readonly TimeSpan UpdateCacheTimer = TimeSpan.FromMinutes(3);
+
+        static public readonly string BusNetworkFlagKey = "BusNetwork";
+        static public readonly TimeSpan BusNetworkCacheTimer = TimeSpan.FromDays(100);
+
+        // Timezone
+        static public readonly string Timezone = "Eastern Standard Time";
+
+        // STM Values
+        static public readonly int MetroLines = 5;
+        static public readonly int MinutesErrorMargin = 2;
+        static public readonly int DaysBeforeUpdateDate = 9;
+
+        // API & URLs
+        static public readonly string ApiKeyWord = "stm_api_key";
+        static public readonly string ApiParam = "apiKey";
         static public readonly string ApiUrl = "https://api.stm.info/pub/od/gtfs-rt/ic/v2";
         static public readonly string StaticDownloadUrl = "https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip";
 
@@ -13,7 +31,7 @@
 
         // Directories
         static public readonly string DataDir = "Data/";
-        static public readonly string StaticDir = "gtfs_static/";
+        static public readonly string StaticDir = "GtfsStatic/";
         static public readonly string JsonDir = "GeneratedJson/";
 
         // File Paths
@@ -24,12 +42,5 @@
         static public readonly string Stops =       DataDir + StaticDir + "stops.txt";
 
         static public readonly string JsonFilePath = DataDir + JsonDir + "BusNetwork.json";
-
-        // STM Values
-        static public readonly int NbLignesMetro = 5;
-        static public readonly int NbJoursGtfsStaticDisponible = 9;
-
-        // Update Timer
-        static public readonly TimeSpan UpdateCheckerTimer = TimeSpan.FromSeconds(50);
     }
 }

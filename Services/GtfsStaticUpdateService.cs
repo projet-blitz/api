@@ -3,10 +3,11 @@ using CsvHelper;
 using System.Globalization;
 using static blitz_api.Config.Config;
 using blitz_api.Controllers;
+using blitz_api.Helpers;
 
 namespace blitz_api.Services
 {
-    public class GtfsStaticUpdateService : IHostedService, IDisposable
+    public class GtfsStaticUpdateService() : IHostedService, IDisposable
     {
         private Timer? timer;
 
@@ -28,101 +29,60 @@ namespace blitz_api.Services
             GC.SuppressFinalize(this);
         }
 
-        public void Test(object? state)
-        {
-            string baseDirectory = Environment.CurrentDirectory;
-
-            // Data directory containing both subdirs
-            string dataDestinationPath = Path.Combine(baseDirectory, DataDir);
-            if (!Directory.Exists(dataDestinationPath))
-                Directory.CreateDirectory(dataDestinationPath);
-
-            // GTFS static dir
-            string staticDestinationPath = Path.Combine(dataDestinationPath, StaticDir);
-            if (!Directory.Exists(staticDestinationPath))
-            {
-                Directory.CreateDirectory(staticDestinationPath);
-            }
-            else
-            {
-                string[] files = Directory.GetFiles(staticDestinationPath);
-                foreach (string file in files)
-                {
-                    File.Delete(file);
-                }
-            }
-
-            // Generated json dir
-            string jsonDestinationPath = Path.Combine(dataDestinationPath, JsonDir);
-            if (!Directory.Exists(jsonDestinationPath))
-            {
-                Console.WriteLine("JSON NOT EXIST - CREATING");
-                Directory.CreateDirectory(jsonDestinationPath);
-            }
-            else
-                Console.WriteLine("JSON EXISTS!!! - DELETING FILESS");
-            {
-                string[] files = Directory.GetFiles(jsonDestinationPath);
-                foreach (string file in files)
-                {
-                    File.Delete(file);
-                }
-            }
-        }
-
         private void CheckDates(object? state)
         {
-            GtfsStaticController staticController = new();
-
-            string staticDestinationPath = Path.Combine(Environment.CurrentDirectory, DataDir + StaticDir);
-            if (!Directory.Exists(staticDestinationPath) || !File.Exists(FeedInfo))
+            if (!GlobalStore.GlobalVar["IsUpdating"])
             {
-                Console.WriteLine("[UPDATE SERVICE] The static folder/file does not exist. Remaking folders.");
-                staticController.MakeBusNetwork();
+                GtfsStaticController staticController = new();
 
-                while (staticController.IsUpdating())
+                string staticDestinationPath = Path.Combine(Environment.CurrentDirectory, DataDir + StaticDir);
+                if (!Directory.Exists(staticDestinationPath) || !File.Exists(FeedInfo) || !File.Exists(JsonFilePath))
                 {
-
+                    Console.WriteLine("[UPDATE SERVICE] Some folders and/or files are missing. Remaking Bus Network.");
+                    staticController.MakeBusNetwork();
                 }
-            }
-            try
-            {
-                using CsvReader csv = new(new StreamReader(FeedInfo), new CsvConfiguration(CultureInfo.InvariantCulture));
+                else
                 {
-                    if (csv.Read())
+                    try
                     {
-                        csv.Read(); // Skip the header
-                        string endDate = csv.GetField(4)!;
-                        csv.Dispose();
-
-                        DateTime currentDate = DateTime.Now;
-
-                        if (DateTime.TryParseExact(endDate, "yyyyMMdd", null, DateTimeStyles.None, out DateTime endDateTime))
+                        using CsvReader csv = new(new StreamReader(FeedInfo), new CsvConfiguration(CultureInfo.InvariantCulture));
                         {
-                            endDateTime.AddDays(-NbJoursGtfsStaticDisponible);
-                            int comparisonResult = currentDate.CompareTo(endDateTime);
-
-                            if (comparisonResult >= 0)
+                            if (csv.Read())
                             {
-                                Console.WriteLine("[UPDATE SERVICE] The current date is equal to or after the date from the CSV.");
+                                csv.Read(); // Skip the header
+                                string endDate = csv.GetField(4)!;
+                                csv.Dispose();
 
-                                staticController.MakeBusNetwork();
+                                DateTime currentDate = DateTime.Now;
+
+                                if (DateTime.TryParseExact(endDate, "yyyyMMdd", null, DateTimeStyles.None, out DateTime endDateTime))
+                                {
+                                    endDateTime.AddDays(-DaysBeforeUpdateDate);
+                                    int comparisonResult = currentDate.CompareTo(endDateTime);
+
+                                    if (comparisonResult >= 0)
+                                    {
+                                        Console.WriteLine($"[UPDATE SERVICE] Current date is equal to or after expiration date minus {DaysBeforeUpdateDate} days.");
+
+                                        staticController.MakeBusNetwork();
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"[UPDATE SERVICE] Current date ({currentDate.ToShortDateString()}) is before expiration date ({endDateTime.ToShortDateString()}).");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[UPDATE SERVICE] Invalid date format in CSV ({endDate}).");
+                                }
                             }
-                            else
-                            {
-                                Console.WriteLine($"[UPDATE SERVICE] Current date ({currentDate.ToShortDateString()}) is before EXP date ({endDateTime.ToShortDateString()}).");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[UPDATE SERVICE] Invalid date format in CSV ({endDate}).");
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("ICI AAAAAAAAAAAAAAAAAAAA" + ex.ToString());
             }
         }
     }

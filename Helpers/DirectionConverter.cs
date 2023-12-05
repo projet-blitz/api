@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using blitz_api.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using blitz_api.Models;
 
 namespace blitz_api.Helpers
 {
@@ -42,7 +42,7 @@ namespace blitz_api.Helpers
                 return new DirectionConverter();
             }
 
-            return base.ResolveContractConverter(objectType);
+            return base.ResolveContractConverter(objectType!)!;
         }
     }
 }

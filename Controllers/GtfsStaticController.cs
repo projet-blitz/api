@@ -9,44 +9,37 @@ using static blitz_api.Config.Config;
 
 namespace blitz_api.Controllers
 {
-    public class GtfsStaticController
+    public class GtfsStaticController()
     {
-        private bool isUpdating = false;
-
-        public bool IsUpdating()
-        {
-            return isUpdating;
-        }
-
-        public string GetBusNetwork()
-        {
-            string baseDirectory = Environment.CurrentDirectory;
-            string localFilePath = Path.Combine(baseDirectory, JsonFilePath);
-
-            return localFilePath;
-        }
-
         public async void MakeBusNetwork()
         {
-            isUpdating = true;
+            if (!GlobalStore.GlobalVar["IsUpdating"])
+            {
+                GlobalStore.GlobalVar["IsUpdating"] = true;
 
-            try
+                try
+                {
+                    CreateDirs();
+                    await GetGtfsStatic();
+                    GetBusSystem();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[GTFS STATIC] Failed to create bus network : " + ex.ToString());
+                }
+                finally 
+                {
+                    GlobalStore.GlobalVar["IsUpdating"] = false;
+                }
+            } else
             {
-                CreateDirs();
-                await GetGtfsStatic();
-                GetBusSystem();
-            } 
-            catch (Exception ex)
-            {
-                Console.WriteLine("Failed to create bus network : " + ex.ToString());
+                Console.WriteLine("[GTFS STATIC] Update already running.");
             }
-
-            isUpdating = false;
         }
 
-        private void CreateDirs()
+        private static void CreateDirs()
         {
-            Console.WriteLine("[1/9] Creating folders...");
+            Console.WriteLine("[GTFS STATIC] Creating folders (1/9)");
 
             string baseDirectory = Environment.CurrentDirectory;
 
@@ -89,12 +82,12 @@ namespace blitz_api.Controllers
         /// <summary>
         /// Obtient le GTFS static (planifié) de la STM.
         /// </summary>
-        private async Task GetGtfsStatic()
+        private static async Task GetGtfsStatic()
         {
             string baseDirectory = Environment.CurrentDirectory;
             string destinationPath = Path.Combine(baseDirectory, DataDir + StaticDir);
 
-            Console.WriteLine("[2/9] Downloading files...");
+            Console.WriteLine("[GTFS STATIC] Downloading files (2/9)");
 
             using HttpClient httpClient = new();
             HttpResponseMessage response = await httpClient.GetAsync(StaticDownloadUrl);
@@ -110,38 +103,38 @@ namespace blitz_api.Controllers
                     await response.Content.CopyToAsync(fileStream);
                 }
 
-                Console.WriteLine($"[3/9] Download successful. File saved in: {localFilePath}");
+                Console.WriteLine($"[GTFS STATIC] Download successful (3/9). File saved in: {localFilePath}");
 
                 ZipFile.ExtractToDirectory(localFilePath, destinationPath);
 
-                Console.WriteLine($"[4/9] Successfully unzipped file");
+                Console.WriteLine($"[GTFS STATIC] Successfully unzipped file (4/9)");
 
                 File.Delete(localFilePath);
 
-                Console.WriteLine($"[5/9] {fileName} has been deleted.");
+                Console.WriteLine($"[GTFS STATIC] {fileName} has been deleted (5/9)");
             }
             else
             {
-                throw new Exception($"Download failed. Status code: {response.StatusCode}");
+                throw new Exception($"[GTFS STATIC] Download failed. Status code: {response.StatusCode}");
             }
         }
 
         /// <summary>
-        /// Génère le système de bus selon le GTFS static
-        /// et le sauvegarde dans un fichier .json
+        /// Generates the bus network from the static csv
+        /// Saves the network in a json file.
         /// </summary>
         private void GetBusSystem()
         {
-            // Obtenir toutes les routes (IDs & Noms)
-            Console.WriteLine("[6/9] Obtaining Routes...");
+            // Obtain all bus lines (IDs & Names)
+            Console.WriteLine("[GTFS STATIC] Obtaining Routes (6/9)");
 
-            List<Models.Route> routesList = new();
+            List<Models.Route> routesList = [];
 
             using var reader = new StreamReader(Routes);
             using CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-            for (int i = 0; i < NbLignesMetro; i++)
+            for (int i = 0; i < MetroLines; i++)
             {
-                reader.ReadLine();
+                reader.ReadLine(); //Skip metro lines
             }
 
             while (csv.Read())
@@ -149,8 +142,8 @@ namespace blitz_api.Controllers
                 routesList.Add(new Models.Route(csv.GetField(0)!, csv.GetField(3)!));
             }
 
-            // Obtenir toutes les directions
-            Console.WriteLine("[7/9] Obtaining Directions...");
+            // Obtain directions for all bus lines
+            Console.WriteLine("[GTFS STATIC] Obtaining Directions (7/9)");
 
             Dictionary<string, string> directionMap = new()
             {
@@ -182,7 +175,7 @@ namespace blitz_api.Controllers
                         }
                         else
                         {
-                            if (csvTrips.GetField(3) == route.RouteId + "-" + direction2)
+                            if (csvTrips.GetField(3) == $"{route.RouteId}-{direction2}")
                             {
                                 route.Directions.Add(new Direction(directionMap[direction1], csvTrips.GetField(2)!));
                                 break;
@@ -192,10 +185,10 @@ namespace blitz_api.Controllers
                 }
             }
 
-            // Obtenir tous les stops pour les routes
-            Console.WriteLine("[8/9] Obtaining Stops...");
+            // Obtain stops for every bus lines
+            Console.WriteLine("[GTFS STATIC] Obtaining Stops (8/9)");
 
-            Dictionary<string, List<Tuple<string, string>>> csvData = new();
+            Dictionary<string, List<Tuple<string, string>>> csvData = [];
 
             using var readerStops = new StreamReader(StopTimes);
             using CsvReader csvStopTimes = new(readerStops, new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -205,12 +198,13 @@ namespace blitz_api.Controllers
                 string stopId = csvStopTimes.GetField(3)!;
                 string stopSequence = csvStopTimes.GetField(4)!;
 
-                if (!csvData.ContainsKey(tripId))
+                if (!csvData.TryGetValue(tripId, out List<Tuple<string, string>>? value))
                 {
-                    csvData[tripId] = new List<Tuple<string, string>>();
+                    value = ([]);
+                    csvData[tripId] = value;
                 }
 
-                csvData[tripId].Add(Tuple.Create(stopId, stopSequence));
+                value.Add(Tuple.Create(stopId, stopSequence));
             }
 
             foreach (var route in routesList)
@@ -227,10 +221,10 @@ namespace blitz_api.Controllers
                 }
             }
 
-            // Obtenir tous les noms des stops
-            Console.WriteLine("[9/9] Obtaining Stop Names...");
+            // Obtain names for all stops
+            Console.WriteLine("[GTFS STATIC] Obtaining Stop Names (9/9)");
 
-            Dictionary<string, string> csvStopData = new();
+            Dictionary<string, string> csvStopData = [];
             using CsvReader csvStops = new(new StreamReader(Stops), new CsvConfiguration(CultureInfo.InvariantCulture));
             while (csvStops.Read())
             {
@@ -274,10 +268,10 @@ namespace blitz_api.Controllers
             }
             else
             {
-                throw new Exception("Cannot write file - JSON directory does not exist");
+                throw new Exception("[GTFS STATIC] Cannot write file - JSON directory does not exist");
             }
 
-            Console.WriteLine("Bus Network update successful");
+            Console.WriteLine("[GTFS STATIC] Bus Network update successful");
         }
     }
 }

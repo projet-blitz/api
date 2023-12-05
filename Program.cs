@@ -1,59 +1,36 @@
-using blitz_api.Config;
-using blitz_api.Controllers;
+using blitz_api.Helpers;
 using blitz_api.Services;
+using System.Collections.Concurrent;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddHostedService<GtfsStaticUpdateService>();
+
+GlobalStore.GlobalVar = new ConcurrentDictionary<string, bool>();
+GlobalStore.GlobalVar["IsUpdating"] = false;
+
 var app = builder.Build();
 
-app.Use(async (context, next) =>
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    var endpoint = context.GetEndpoint();
-    if (endpoint == null)
-    {
-        context.Response.StatusCode = 404;
-        await context.Response.WriteAsync("Bad Endpoint");
-        return;
-    }
-    await next();
-});
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-GtfsRealtimeController realtimeController = new();
-GtfsStaticController staticController = new();
+app.UseStatusCodePages();
 
-app.MapGet("/getBusNetwork", async context =>
-{
-    /*while (Config.IsUpdating)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(2));
-    }*/
-    
-    var jsonFile = staticController.GetBusNetwork();
+app.UseHttpsRedirection();
 
-    if (File.Exists(jsonFile))
-    {
-        var json = Results.File(jsonFile, "application/json");
-        context.Response.StatusCode = 200;
-        await context.Response.WriteAsJsonAsync(json);
-    }
-    else
-    {
-        context.Response.StatusCode = 404;
-        await context.Response.WriteAsync("Bus Network not found");
-    }
-});
+app.UseAuthorization();
 
-app.MapGet("/updateBusNetwork", () => 
-{
-    //if (!Config.IsUpdating)
-    staticController.MakeBusNetwork();
-   
-});
-
-app.MapGet("/horaires/{routeId}/{stopId}", async (string routeId, string stopId) =>
-{
-    List<string> arrivalTimes = await realtimeController.GetHoraireForStop(routeId, stopId);
-    return Results.Ok(arrivalTimes);
-});
+app.MapControllers();
 
 app.Run();
