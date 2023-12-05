@@ -21,19 +21,15 @@ git clone https://github.com/projet-blitz/api.git
 
 2. Ouvrez le projet dans votre environnement de développement préféré (par exemple, Visual Studio).
 
-3. Exécutez le projet pour démarrer l'API.
-
-## Configuration
-1. Créez un fichier `.env` à la racine du projet et ajoutez votre clé d'API STM de la manière suivante :
+3. Créez un fichier `.env` à la racine du projet et ajoutez votre clé d'API STM de la manière suivante :
 ```bash
 stm_api_key=VOTRE_CLÉ_API_STM
 ```
 
-2. Générez le réseau de bus. Pour ce faire, vous pouvez utiliser l'endpoint `GET /updateBusNetwork` (voir la section utilisation). Le back-end va télécharger les fichiers du GTFS static (GTFS planifié) et créer un fichier .json contenant le réseau de bus.
+4. Exécutez le projet pour démarrer l'API. Le réseau de bus sera automatiquement créé et mis à jour lorsque la date d'expiration du GTFS static approche.
 
 ## Utilisation
+
 L'API fournit les endpoints suivants pour accéder aux données des horaires de bus en temps réel et du réseau de bus :
-- `GET /getBusNetwork` : Obtiens le réseau de bus de la STM en format json.
-- `GET /horaires/{routeId}/{stopId}` : Obtiens les horaires en temps réel pour un arrêt.
-#### Débuggage et tests :
-- `GET /updateBusNetwork` : Télécharge les fichiers GTFS static (utilisés pour les routes et leurs arrêts) et refait le fichier .json contenant le réseau de bus.
+- `GET /api/getBusNetwork` : Obtiens le réseau de bus de la STM en format json.
+- `GET /api/{routeId}/{stopId}` : Obtiens les horaires en temps réel pour un arrêt.
