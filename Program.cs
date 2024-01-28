@@ -3,6 +3,9 @@ using blitz_api.Services;
 using System.Collections.Concurrent;
 using static blitz_api.Config.Config;
 
+GlobalStore.GlobalVar = new ConcurrentDictionary<string, bool>();
+GlobalStore.GlobalVar[UpdateFlagKey] = false;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,9 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddHostedService<GtfsStaticUpdateService>();
-
-GlobalStore.GlobalVar = new ConcurrentDictionary<string, bool>();
-GlobalStore.GlobalVar[UpdateFlagKey] = false;
 
 var app = builder.Build();
 
